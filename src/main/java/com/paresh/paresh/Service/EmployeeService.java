@@ -4,18 +4,14 @@ package com.paresh.paresh.Service;
 import com.paresh.paresh.Dto.EmployeeDTO;
 import com.paresh.paresh.Entity.EmployeeEntity;
 import com.paresh.paresh.Repository.EmployeeRepository;
-import org.apache.el.util.ReflectionUtil;
+import exceptions.ResourceNotFound;
 import org.modelmapper.ModelMapper;
-import org.springframework.aot.hint.annotation.Reflective;
-import org.springframework.boot.Banner;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -58,6 +54,7 @@ public class EmployeeService {
 
 
     public EmployeeDTO updateEmployee(EmployeeDTO inputEmp, Long employeeId) {
+        isExistingEmployeeId(employeeId);
         EmployeeEntity empEnt  = modelMapper.map(inputEmp, EmployeeEntity.class);
         empEnt.setId(employeeId);
         EmployeeEntity savedEmployeeEntity = employeeRepository.save(empEnt);
@@ -65,26 +62,23 @@ public class EmployeeService {
     }
 
 
-    public boolean isExisitingEmployee(long id){
-        return employeeRepository.existsById(id);
+    public void isExistingEmployeeId(Long id){
+        boolean exists =  employeeRepository.existsById(id);
+        if(!exists) throw  new ResourceNotFound("Employee not found "+id);
     }
 
 
 
     public Boolean deleteEmployeebyId(Long id) {
 
-        if(!isExisitingEmployee(id)){
-            return false;
-        }
+        isExistingEmployeeId(id);
         employeeRepository.deleteById(id);
         return true;
 
     }
 
     public EmployeeDTO updatePartialData(Long id, Map<String, Object> updates) {
-        if(!isExisitingEmployee(id)){
-            return null;
-        }
+        isExistingEmployeeId(id);
         EmployeeEntity employeeEntity = employeeRepository.findById(id).get();
         //REFLECTION USE TO UPDATE OBJECT PARTIALLY
         updates.forEach((field,value)->{
